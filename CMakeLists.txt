@@ -11,9 +11,6 @@ set(CMAKE_C_FLAGS_RELWITHDEBINFO "")
 
 # Set custom output directories
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 file(GLOB_RECURSE SOURCES
 	"src/*.cpp"
@@ -27,6 +24,16 @@ file(GLOB_RECURSE HEADERS
 
 # Add the executable target
 add_executable(${TARGET_NAME} ${SOURCES} ${HEADERS})
+
+# Set output directory to the desired one, without the Release/Debug sudirs that MSBuild adds by default
+get_property(current_targets DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
+	foreach(TARGET ${current_targets})
+		set_target_properties(${TARGET} PROPERTIES
+			RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<0:>
+			LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<0:>
+			ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<0:>
+	)
+endforeach()
 
 # Compiler flags for different platforms
 if (MSVC)
@@ -67,6 +74,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
 
 endif()
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/cpputils ${CMAKE_BINARY_DIR}/cpputils)
+set(OUTPUT_DIR ${CMAKE_BINARY_DIR})
+add_subdirectory(${CMAKE_SOURCE_DIR}/cpputils)
 
 target_link_libraries(${TARGET_NAME} cpputils)
